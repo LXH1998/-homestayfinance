@@ -1,0 +1,34 @@
+package com.xiaohua.homestayfinance.entity;
+
+public class Role{
+
+    private Integer role_ID;
+
+    public Integer getRole_ID() {
+        return role_ID;
+    }
+
+    public void setRole_ID(Integer role_ID) {
+        this.role_ID = role_ID;
+    }
+
+    public String getRole_Name() {
+        return role_Name;
+    }
+
+    public void setRole_Name(String role_Name) {
+        this.role_Name = role_Name;
+    }
+
+    private String role_Name;
+
+    private String role_State;
+
+    public String getRole_State() {
+        return role_State;
+    }
+
+    public void setRole_State(String role_State) {
+        this.role_State = role_State;
+    }
+}

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>角色管理</title>
+<link type="text/css" th:href="@{/static/layui/css/layui.css}" rel="stylesheet">
+<script type="text/javascript" th:src="@{/static/js/jquery-3.4.0.js}"></script>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+</head>
+<!--<style>-->
+    <!--.layui-table-cell{-->
+        <!--height:15px;-->
+        <!--line-height: 15px;-->
+    <!--}-->
+<!--</style>-->
+<style>
+    body{overflow-y: scroll;} /* 禁止刷新后出现横向滚动条 */
+</style>
+<body>
+
+<!--表单-->
+<form class="layui-form" >
+        <div class="layui-form-item">
+            <label class="layui-form-label">搜索</label>
+            <div class="layui-input-inline">
+                <input id="search" type="text" name="password" placeholder="搜索角色" class="layui-input">
+            </div>
+            <label class="layui-form-label">添加角色</label>
+            <div class="layui-input-inline">
+                <input type="text" name="role_Name" required lay-verify="required" placeholder="输入角色名" class="layui-input">
+            </div>
+            <button class="layui-btn" lay-submit lay-filter="formDemo">添加</button>
+        </div>
+</form>
+
+<!--头部工具栏-->
+<div class="layui-btn-group demoTable">
+    <button class="layui-btn layui-btn-danger " data-type="batchDelete"><i class="layui-icon layui-icon-delete">&#xe640;</i>批量删除</button>
+</div>
+
+
+<!--数据表格-->
+<table id="demo" lay-filter="test"></table>
+
+<!--行内工具条-->
+<script type="text/html" id="barDemo">
+    {{#  if(d.role_Name == "管理员"){ }}
+    <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="detail">权限</a>
+    {{#  } else { }}
+    <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="detail">权限</a>
+    <!--<a class="layui-btn layui-btn-xs" lay-event="add">添加权限</a>-->
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{#  } }}
+
+
+    <!-- 这里同样支持 laytpl 语法，如： -->
+    <!--{{#  if(d.auth > 2){ }}-->
+    <!--<a class="layui-btn layui-btn-xs" lay-event="check">审核</a>-->
+    <!--{{#  } }}-->
+</script>
+
+<!--序号自增-->
+<script type="text/html" id="xuhao">
+    {{d.LAY_TABLE_INDEX+1}}
+</script>
+
+<!--数据表格js-->
+<script type="text/javascript">
+    //弹出框中点击保存按钮将子页面中的函数submitCheckedNode传给powerIds
+    var powerIds;
+    <!--弹出框中点击保存按钮,将子页面中被选中的节点power_Id传给codeId-->
+    var codeId;
+    //获取树的初始勾选数据
+    var originalValue;
+    layui.use('table', function(){
+        var table = layui.table;
+
+        //监听表格复选框选择
+        var content='';
+        table.on('checkbox(test)', function(obj){
+            console.log(obj.checked); //当前是否选中状态
+            console.log(obj.data); //选中行的相关数据
+            console.log(obj.type); //如果触发的是全选，则为：all，如果触发的是单选，则为：one
+        });
+
+        //数据表表头
+        table.render({
+            elem: '#demo'
+            // ,height: '100%'
+            // ,width:'100%'
+            ,url: '/roleManagement/allRoles' //数据接口
+            ,page: true //开启分页
+            ,cols: [
+                [
+                    {type: 'checkbox', width:'10%'}
+                    //表头
+                    ,{field: 'role_ID', type:'numbers',title: '序号', width:'10%', sort: true, align: 'center'}
+                    ,{field: 'role_Name', title: '角色', width:'50%', align: 'center'}
+                    ,{title: '操作', align: 'center', toolbar: '#barDemo'}
+                ]
+            ]
+            ,done:function (res, curr, count) {
+                var state = "";
+                for (var i in res.data){
+                    var item = res.data[i]
+                    if (item.role_Name == "管理员"){
+                        // checkbox 根据条件设置不可选中
+                        $('tr[data-index=' + i + '] input[type="checkbox"]').prop('disabled', true);
+                        state = "1";// 隐藏表头全选判断状态
+
+                    }
+                }
+
+                // 判断条件
+                if(state == "1"){
+                    // 根据条件移除全选 checkbox
+                    // $('th[data-field=0] div').replaceWith('<div class="layui-table-cell laytable-cell-5-0-0"><span></span></div>');
+                    $('th[data-field=0]').children().children('div').css('visibility', 'hidden');
+                    // form.render();// 重新渲染一下
+                }else {
+                    //翻页显示全选按钮 checkbox
+                    $('tr[data-index=0] input[type="checkbox"]').css('visibility', 'visible');
+                }
+            }
+            // ,limits : [ 5,6,7,8,9,10 ] //控制多少行一页（默认五条一页）
+            // ,limit : 5 //每页默认显示的数量
+
+
+        });
+
+
+        //监听工具条
+        table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            console.log(data)
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+            var roleName = data.role_Name; //获得属性role_Name的值
+            var roleID = data.role_ID;
+
+
+
+            if(layEvent === 'detail'){ //查看角色权限
+                //var originalValue;
+                //do somehing
+                //iframe层-父子操作
+                layer.open({
+                    type: 2,
+                    title:'角色权限',
+                    area: ['300px', '430px'],
+                    offset: '15px',
+                    fixed: false, //不固定
+                    maxmin: true,
+                    scrollbar: false,
+                    content: '/roleManagement/zTree',
+                    btn: ['保存', '关闭'],
+                    yes: function(index){
+                        powerIds();
+                        console.log(codeId)
+                        if (originalValue == codeId){
+                            layer.msg("未做出任何修改")
+                        }else {
+                            layer.confirm("您确定要保存修改吗？",function(){
+                                $.ajax({
+                                    type:"POST",
+                                    url: '/roleManagement/insertThePowers',
+                                    data:{
+                                        "codeId":codeId,
+                                        "role_Id":roleID
+                                    },
+                                    success:function (data) {
+                                        layer.closeAll('loading');
+                                        if(data.code==1){
+                                            layer.msg("修改成功", { shift: -1 , time: 1200 , icon: 1}, function () {
+                                                location.reload(true);
+                                            });
+                                        }else{
+                                            layer.msg('修改失败', {icon: 2,time:3000,shade:0.2});
+                                        }
+                                    }
+                                })
+                            })
+                        }
+
+                    },
+                    btn2 : function(){
+                        layer.close();
+                    },
+                    success:function (layero,index) {
+                        // powerIds();
+                        // console.log(codeId);
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(data)
+
+                    },
+                    end:function () {
+                        // powerIds();
+                        console.log(originalValue)
+                    }
+                });
+            } else if(layEvent === 'del'){ //删除角色
+                layer.confirm('真的删除该角色么', function(index){
+                    //向服务端发送删除指令
+                    $.ajax({
+                        url:'/roleManagement/deleteTheRole',
+                        type:'post',
+                        data:{
+                            role_Name: roleName
+                        },
+                        success:function (res) {
+                            if (res.result=="操作成功"){
+
+                                //操作成功后继续显示当前页数据
+                                $(".layui-laypage-btn").click();
+                                layer.msg(res.result);
+                            } else if (res.result=="操作失败") {
+                                layer.msg(res.result);
+                            }
+                        },
+                        error:function () {
+                            layer.msg("异常");
+                        }
+                    })
+                });
+            } else if(layEvent === 'LAYTABLE_TIPS'){
+                layer.alert('Hi，头部工具栏扩展的右侧图标。');
+            }
+        });
+
+
+        //头部按钮
+        var $ = layui.$, active = {
+            batchDelete: function(){ //批量删除
+                var checkStatus = table.checkStatus('demo')
+                    ,data = checkStatus.data;
+                // layer.msg('选中了：'+ data.length + ' 个');
+
+                if (data.length == 0){
+                    layer.msg("请选择将要删除的数据行", {icon: 2});
+                    return ;
+                }
+                var codeName="";
+                for(var i=0;i<data.length;i++){
+                    codeName += data[i].role_Name+",";
+                    // console.log(codeId);
+                }
+
+                layer.confirm("您确定要删除吗？",function(){
+                    $.ajax({
+                        type:"POST",
+                        url: '/roleManagement/deleteRoles',
+                        data:{"codeName":codeName},
+                        success:function (data) {
+                            layer.closeAll('loading');
+                            if(data.code==1){
+                                layer.msg("删除成功", { shift: -1 , time: 1200 , icon: 1}, function () {
+                                    location.reload(true);
+                                });
+                            }else{
+                                layer.msg('删除失败', {icon: 2,time:3000,shade:0.2});
+                            }
+                        }
+                    })
+                })
+            }
+        };
+
+        $('.demoTable .layui-btn').on('click', function(){
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+
+    });
+
+</script>
+
+
+<!--表单提交-->
+<script>
+    //Demo
+    layui.use(['form','table'], function(){
+        var form = layui.form;
+        var table = layui.table;
+
+        //监听提交
+        form.on('submit(formDemo)', function(data){
+            // var rolename = JSON.stringify(data.field);
+            console.log(data.field);
+            $.ajax({
+                url:'/roleManagement/insertRole',
+                data:data.field,
+                success:function (res) {
+                    // console.log("成功")
+                    // layer.msg("成功")
+                    if (res.result == '操作成功') {
+                        layer.msg(res.result);
+                        //    操作成功执行方法重载
+                        table.reload('demo', {
+                            page: {
+                                curr: 1 //重新从第 1 页开始
+                            }
+                        });
+
+                    }else{
+                        layer.msg(res.result);
+                    }
+                },
+                error:function () {
+                    console.log("异常")
+                }
+            })
+            return false;
+        });
+
+
+        //角色搜索
+        $("#search").bind("input propertychange",function(){
+            var role_Name = $(this).val();
+            // 数据表表头
+            table.render({
+                elem: '#demo'
+                // ,height: 400
+                ,url: '/roleManagement/searchRole' //数据接口
+                ,where:{
+                    role_Name:role_Name
+                }
+                ,page: true //开启分页
+                ,cols: [
+                    [
+                        {type: 'checkbox', fixed: 'left', width:'10%'}
+                        //表头
+                        ,{field: 'role_ID', templet: '#xuhao',title: '序号', width:'10%', sort: true, align: 'center'}
+                        ,{field: 'role_Name', title: '角色', width:'50%', align: 'center'}
+                        ,{title: '操作', fixed:'right', width: '30%', align: 'center', toolbar: '#barDemo'}
+                    ]
+                ]
+                ,done:function (res, curr, count) {
+                    var state = "";
+                    for (var i in res.data){
+                        var item = res.data[i]
+                        if (item.role_Name == "管理员"){
+                            // checkbox 根据条件设置不可选中
+                            $('tr[data-index=' + i + '] input[type="checkbox"]').prop('disabled', true);
+                            state = "1";// 隐藏表头全选判断状态
+
+                        }
+                    }
+
+                    // 判断条件
+                    if(state == "1"){
+                        // debugger
+                        // 根据条件移除全选 checkbox
+                        // $('th[data-field=0] div').replaceWith('<div class="layui-table-cell laytable-cell-5-0-0"><span></span></div>');
+                        $('th[data-field=0]').children().children('div').css('visibility', 'hidden');
+                    }else {
+                        //翻页显示全选按钮 checkbox
+                        $('tr[data-index=0] input[type="checkbox"]').css('visibility', 'visible');
+                    }
+                }
+            });
+            return false;
+        })
+
+    });
+
+
+</script>
+</body>
+</html>
