@@ -33,10 +33,14 @@ public class UserRealm extends AuthorizingRealm {
         UsernamePasswordToken token = (UsernamePasswordToken)arg0;
         String userName = token.getUsername();
         User user = userService.selectUserByAccount(userName);
+        String a = userService.toString();
+        user.getUser_Id();
+
         if(user==null)
         {
             return null;
         }
+
         return new SimpleAuthenticationInfo("",token.getPassword(),"");
     }
 }

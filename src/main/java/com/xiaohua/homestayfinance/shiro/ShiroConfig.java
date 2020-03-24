@@ -39,15 +39,17 @@ public class ShiroConfig {
          *       role: 该资源必须得到角色权限才可以访问
          */
         Map<String,String> filterMap = new LinkedHashMap<String,String>();
-		/*filterMap.put("/add", "authc");
-		filterMap.put("/update", "authc");*/
+		filterMap.put("/add", "authc");
+		filterMap.put("/update", "authc");
 
         filterMap.put("/userAdministration/goUserInterface", "anon");
 
-        filterMap.put("/*", "anon");
+        filterMap.put("/*", "authc");
+        //logout是shiro提供的过滤器,这是走自定义的 shiroLogoutFilter 上面有配置
+//        filterMap.put("/login/logOut", "logout");
 
         //修改调整的登录页面
-        shiroFilterFactoryBean.setLoginUrl("/login/goIndex");
+        shiroFilterFactoryBean.setLoginUrl("/login/gologin");
 
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterMap);
 
@@ -69,4 +71,17 @@ public class ShiroConfig {
     {
         return new UserRealm();
     }
+
+    /**
+     * 配置LogoutFilter
+     * @return
+     */
+    public ShiroLogoutFilter shiroLogoutFilter(){
+        ShiroLogoutFilter shiroLogoutFilter = new ShiroLogoutFilter();
+        //配置登出后重定向的地址，等出后配置跳转到登录接口
+        shiroLogoutFilter.setRedirectUrl("/login");
+        return shiroLogoutFilter;
+    }
+
+
 }

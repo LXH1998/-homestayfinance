@@ -6,16 +6,25 @@ package com.xiaohua.homestayfinance.entity;
  * @date 2020-02-28 9:46
  */
 public class goods {
-    private String goodsId;
+    private int goodsId;
     private String goodsName;
     private String goodsPlace;
-    private String goodsNum;
+    private int goodsNum;
+    private String isDel;
 
-    public String getGoodsId() {
+    public String getIsDel() {
+        return isDel;
+    }
+
+    public void setIsDel(String isDel) {
+        this.isDel = isDel;
+    }
+
+    public int getGoodsId() {
         return goodsId;
     }
 
-    public void setGoodsId(String goodsId) {
+    public void setGoodsId(int goodsId) {
         this.goodsId = goodsId;
     }
 
@@ -35,11 +44,11 @@ public class goods {
         this.goodsPlace = goodsPlace;
     }
 
-    public String getGoodsNum() {
+    public int getGoodsNum() {
         return goodsNum;
     }
 
-    public void setGoodsNum(String goodsNum) {
+    public void setGoodsNum(int goodsNum) {
         this.goodsNum = goodsNum;
     }
 

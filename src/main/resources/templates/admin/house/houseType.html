@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>批次管理</title>
+<link type="text/css" th:href="@{/static/layui/css/layui.css}" rel="stylesheet">
+<script type="text/javascript" th:src="@{/static/js/jquery-3.4.0.js}"></script>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+</head>
+<body>
+<style>
+    /*.layui-table-page {*/
+    /*    !*background-color: #1AA094;*!*/
+    /*    z-index: 99999;*/
+    /*    position: fixed;*/
+    /*    bottom: 0px;*/
+    /*}*/
+</style>
+<!--搜索框-->
+<div class="demoTable">
+    房屋名称：
+    <div class="layui-inline" style="margin-right: 40px">
+        <input class="layui-input" name="housetype_name" id="housetype_name"  placeholder="搜索类别" autocomplete="off">
+    </div>
+    添加类别：
+    <div class="layui-input-inline">
+        <input type="text" name="house_type" id="house_type"  lay-verify="required" placeholder="输入类别名" class="layui-input">
+    </div>
+    <button type="button" class="layui-btn"  id="addHousetype">
+        <i class="layui-icon">&#xe608;</i> 添加
+    </button>
+</div>
+<table id="demo" lay-filter="test"></table>
+
+<!--生成序号-->
+<script  type="text/html" id="xuhao">
+    {{d.LAY_TABLE_INDEX+1}}
+</script>
+<!--表格的操作-->
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="houseGoods">房屋物品</a>
+    <a class="layui-btn layui-btn-xs" lay-event="house">分类房屋</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/javascript">
+    layui.use(['form', 'layedit', 'laydate','table','jquery'], function() {
+        var form = layui.form
+            , layer = layui.layer
+            , layedit = layui.layedit
+            , laydate = layui.laydate
+            , $ = layui.jquery
+            , table = layui.table;
+
+        //数据表表头
+        table.render({
+            elem: '#demo'
+            ,url: '/house/selectHouseType' //数据接口
+            ,page: true //开启分页
+            ,cols: [
+                [ //表头
+                    {field: '序号', templet: '#xuhao',title: '序号', width:'20%', sort: true, fixed: 'left', align: 'center'},
+                    {field: 'housetype_name', title: '房屋类别', width: '50%',align: 'center'},
+                    {title: '操作', width: '29%', toolbar: '#barDemo'}
+                ]
+            ]
+        });
+
+        //监听工具条
+        table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            console.log(data)
+            var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+            $("#id").html("填充代码");
+            // console.log(tr[0].innerHTML)  获取DOM结构
+
+            if(layEvent === 'del'){ //删除
+                $.ajax({
+                    url:'/house/deleteOneHousetype',
+                    type:'post',
+                    data:{
+                        housetypeId: data.housetype_id
+                    },
+                    success:function (res) {
+                        layer.msg(res.result);
+                        table.reload("demo",{
+                            page: {
+                                curr: 1 //重新从第 1 页开始
+                            }
+                            ,url:"/house/selectHouseType"
+                        });
+                    }
+                })
+            }else if(obj.event === 'house'){
+
+                objData = obj.data;
+                housedata = null;
+                $.ajax({
+                    url: '/house/selectHouseByTypeId',
+                    dataType: 'json',
+                    data:{
+                        housetypeId: objData.housetype_id
+                    },
+                    type: 'post',
+                    success: function (res) {
+                         housedata = res.data
+                        houseIndex = res.houseIndex;
+                        layer.open({
+                            type:2
+                            ,skin:'layui-layer-rim'//加上边框
+                            ,maxmin: true //开启最大化最小化按钮
+                            ,area: ["800px","500px"]
+                            ,title: "设置房屋类别"
+                            ,content:"/house/goTypeHouse"
+                            ,success: function (layero,index) {
+                                var body = layer.getChildFrame('body', index);
+                                var iframe = window['layui-layer-iframe' + index];
+                            },
+                            end:function () {
+                                objData = null;
+                                if(house_name.val()==""&&house_type.val()==""){
+                                    table.reload("demo",{
+                                        page: {
+                                            curr: 1 //重新从第 1 页开始
+                                        }
+                                        ,url:"/house/allHouseDate"
+
+                                    });
+                                }else{
+                                    table.reload("demo",{
+                                        page: {
+                                            curr: 1 //重新从第 1 页开始
+                                        }
+                                        ,url:"/house/selectHouseByNameAndType"
+                                        ,where: {
+                                            houseName: house_name.val()
+                                            ,houseType:house_type.val()
+                                        }
+                                    });
+                                }
+
+                            }
+                        })
+                    }
+                })
+
+
+            }else if(obj.event === 'houseGoods'){
+
+                objData = obj.data;
+                housedata = null;
+                        layer.open({
+                            type:2
+                            ,skin:'layui-layer-rim'//加上边框
+                            ,maxmin: true //开启最大化最小化按钮
+                            ,area: ["800px","500px"]
+                            ,title: "设置房屋物品"
+                            ,content:"/house/goHouseGoods"
+                            ,success: function (layero,index) {
+                                var body = layer.getChildFrame('body', index);
+                                var iframe = window['layui-layer-iframe' + index];
+                            },
+                            end:function () {
+                                objData = null;
+                                if(house_name.val()==""&&house_type.val()==""){
+                                    table.reload("demo",{
+                                        page: {
+                                            curr: 1 //重新从第 1 页开始
+                                        }
+                                        ,url:"/house/allHouseDate"
+
+                                    });
+                                }else{
+                                    table.reload("demo",{
+                                        page: {
+                                            curr: 1 //重新从第 1 页开始
+                                        }
+                                        ,url:"/house/selectHouseByNameAndType"
+                                        ,where: {
+                                            houseName: house_name.val()
+                                            ,houseType:house_type.val()
+                                        }
+                                    });
+                                }
+
+                            }
+                        })
+
+
+
+            }
+        });
+
+        //添加房屋类别
+        $("#addHousetype").click(function () {
+
+            let house_type = $("#house_type").val()
+            if(house_type == "")
+            {
+                layer.msg("请输入添加的类别!");
+                return;
+            }else {
+                $.ajax({
+                    url:"/house/checkHousetypeName",
+                    data:{
+                        housetypeName:house_type
+                    },
+                    success:function (res) {
+                        if(res){
+                            layer.msg("该类别已存在",{icon:2})
+                        }else{
+                            $.ajax({
+                                url:"/house/insertHousetype",
+                                data:{
+                                    housetypeName:house_type
+                                },
+                                success:function (res) {
+                                    if(res == 1){
+                                        layer.msg("添加成功！")
+                                        table.reload("demo",{
+                                            page: {
+                                                curr: 1 //重新从第 1 页开始
+                                            }
+                                            ,url:"/house/selectHouseType"
+                                        });
+                                    }
+                                }
+                            })
+                        }
+                    }
+                })
+            }
+
+        })
+
+        //查询框重载
+        $("#housetype_name").bind("input propertychange",function () {
+            var housetype_name = $('#housetype_name').val();
+            //执行重载
+            if(housetype_name ==""){
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/house/selectHouseType"
+
+                });
+            }else{
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/house/selectHouseTypeByName"
+                    ,where: {
+                        housetypeName: housetype_name
+                    }
+                });
+            }
+
+        })
+    })
+</script>
+</body>
+</html>

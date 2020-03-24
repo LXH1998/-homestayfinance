@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohua.homestayfinance.mapper.HouseMapper">
+<resultMap id="UserResultMap" type="com.xiaohua.homestayfinance.entity.house">
+    <result property="houseId" column="house_id"></result>
+    <result property="houseType" column="house_type"></result>
+    <result property="houseName" column="house_name"></result>
+    <result property="houseAddress" column="house_address"></result>
+    <result property="housePrice" column="house_price"></result>
+    <result property="isDel" column="is_del"></result>
+</resultMap>
+
+    <!--查询所有房屋（包括房屋类型）（分页）-->
+    <select id="selectAllHouse" resultType="HashMap">
+        select * from house h left join  housetype ht
+            on h.house_type = ht.housetype_id
+        where h.is_del = 1
+        group by h.house_id limit #{pages},#{limit}
+    </select>
+    <!--查询所有房屋数量-->
+    <select id="selectAllHouseCount" resultType="java.lang.Integer">
+        select  count(*) from house  where is_del = 1
+    </select>
+    <!--查询所有房屋类别-->
+    <select id="selectAllHouseType" resultType="HashMap">
+        select * from housetype  where is_del = 1
+    </select>
+    <!--查询所有房屋类别(分页查询)-->
+    <select id="selectPageHouseType" resultType="HashMap">
+        select * from housetype where is_del = 1 group by housetype_id limit #{pages},#{limit}
+    </select>
+
+    <!--查询所有房屋类别数量-->
+    <select id="selectAllHouseTypeCount" resultType="java.lang.Integer">
+        select count(*) from housetype where is_del = 1
+    </select>
+    <!--房屋的模糊查询-->
+    <select id="selectHouseByNameAndType" resultType="HashMap">
+   select * from house h left join  housetype ht
+            on h.house_type = ht.housetype_id
+        where h.is_del = 1 and h.house_name LIKE  concat('%',#{houseName},'%')
+         and h.house_type LIKE  concat('%',#{houseType},'%')
+        group by h.house_id limit #{pages},#{limit}
+    </select>
+    <!--房屋的模糊查询的Count-->
+    <select id="selectHouseByNameAndTypeCount" resultType="java.lang.Integer">
+   select count(*) from house h left join  housetype ht
+            on h.house_type = ht.housetype_id
+        where h.is_del = 1 and h.house_name LIKE  concat('%',#{houseName},'%')
+         and h.house_type LIKE  concat('%',#{houseType},'%')
+
+    </select>
+<!--    检查房屋是否已经存在-->
+    <select id="checkHouseName" parameterType="java.lang.String" resultType="java.lang.Boolean">
+    <![CDATA[ select count(house_id)
+    from house where house_name = #{houseName} AND is_del = 1]]>
+    </select>
+<!--    插入房屋-->
+    <insert id="insertHouse" parameterType="com.xiaohua.homestayfinance.entity.house">
+          insert into house(house_name,house_type,house_address,house_price) values(#{houseName},#{houseType},#{houseAddress},#{housePrice})
+    </insert>
+    <!--修改房屋信息-->
+    <update id="updateHouse" parameterType="com.xiaohua.homestayfinance.entity.house">
+        update  house set house_name  = #{houseName},house_type  = #{houseType},house_address  = #{houseAddress},house_price  = #{housePrice}
+         where house_id = #{houseId}
+    </update>
+
+    <!--删除房屋-->
+    <update id="deleteOneHouse" parameterType="java.lang.String">
+        update  house set is_del  = 0 where house_id = #{houseId}
+    </update>
+
+
+    <!--房屋类别的模糊查询-->
+    <select id="selectHouseTypeByName" resultType="HashMap">
+   select * from housetype  where is_del = 1 AND  housetype_name LIKE  concat('%',#{housetypeName},'%')
+        group by housetype_id limit #{pages},#{limit}
+    </select>
+    <!--房屋类别的模糊查询的Count-->
+    <select id="selectHouseTypeByNameCount" resultType="java.lang.Integer">
+    select count(*) from housetype  where is_del = 1 AND  housetype_name LIKE  concat('%',#{housetypeName},'%')
+    </select>
+    <!--   检查房屋类别是否已经存在-->
+    <select id="checkHousetypeName" parameterType="java.lang.String" resultType="java.lang.Boolean">
+    <![CDATA[ select count(housetype_id)
+    from housetype where housetype_name = #{housetypeName}]]>
+    </select>
+    <!--    插入房屋类别-->
+    <insert id="insertHousetype" parameterType="java.lang.String">
+          insert into housetype(housetype_name) values(#{housetypeName})
+    </insert>
+    <!-- 删除房屋类别-->
+    <update id="deleteOneHousetype" parameterType="java.lang.String">
+        update  housetype set is_del  = 0 where housetype_id = #{housetypeId}
+    </update>
+
+    <!--根据类别ID查询对应类别下的房屋-->
+    <select id="selectHouseByTypeId" parameterType="java.lang.String" resultType="HashMap">
+    select * from house  where is_del = 1 AND  house_type = #{housetypeId}
+    </select>
+    <!--查找所有房屋-->
+    <select id="selectHouse" resultType="HashMap">
+    select house_id,house_name from house  where is_del = 1
+    </select>
+
+
+    <!--根据房屋类别查找房屋物品（分页）-->
+    <select id="selectGoodsByTypeId" parameterType="java.lang.String" resultType="HashMap">
+        select * from housegoods hg left join  goods gs
+            on hg.goods_id = gs.goods_id
+        where gs.is_del = 1 AND hg.housetype_id = #{housetypeId}
+        group by hg.goods_id limit #{pages},#{limit}
+    </select>
+    <!--根据房屋类别查找房屋物品数量-->
+    <select id="selectGoodsByTypeIdCount" parameterType="java.lang.String" resultType="HashMap">
+        select * from housegoods hg left join  goods gs
+            on hg.goods_id = gs.goods_id
+        where gs.is_del = 1 AND hg.housetype_id = #{housetypeId}
+    </select>
+
+
+    <!--  插入房屋物品-->
+    <insert id="insertHouseGoods" parameterType="java.lang.String">
+          insert into housegoods(housetype_id,goods_id,goods_num) values(#{housetypeId},#{goodsId},#{goodsNum})
+    </insert>
+
+</mapper>

@@ -19,7 +19,15 @@ public class order {
 
     private Date checkinTime;
     private Date departureTime;
+    private String isDel;
 
+    public String getIsDel() {
+        return isDel;
+    }
+
+    public void setIsDel(String isDel) {
+        this.isDel = isDel;
+    }
     public int getOrderId() {
         return orderId;
     }

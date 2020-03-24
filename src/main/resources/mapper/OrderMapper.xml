@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohua.homestayfinance.mapper.OrderMapper">
+    <resultMap id="UserResultMap" type="com.xiaohua.homestayfinance.entity.order">
+        <result property="orderId" column="house_id"></result>
+        <result property="houseId" column="house_type"></result>
+        <result property="housetypeId" column="house_name"></result>
+        <result property="tenantName" column="house_address"></result>
+        <result property="tenantSex" column="house_price"></result>
+        <result property="tenantAge" column="house_price"></result>
+        <result property="isDamage" column="house_price"></result>
+        <result property="checkinTime" column="house_price"></result>
+        <result property="departureTime" column="house_price"></result>
+        <result property="isDel" column="is_del"></result>
+    </resultMap>
+</mapper>

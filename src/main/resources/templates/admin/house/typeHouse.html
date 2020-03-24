@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>批次管理</title>
+<link type="text/css" th:href="@{/static/layui/css/layui.css}" rel="stylesheet">
+<script type="text/javascript" th:src="@{/static/js/jquery-3.4.0.js}"></script>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+<script type="text/javascript" th:src="@{/static/layui/lay/modules/transfer.js}"></script>
+</head>
+<body>
+<div class="layui-btn-container" style="margin-left: 70px">
+    <button type="button" class="layui-btn" lay-demotransferactive="getData">保存</button>
+    <button type="button" class="layui-btn" lay-demotransferactive="reload">重置</button>
+</div>
+<div id="test7" class="demo-transfer" style="margin-left: 70px"></div>
+<script>
+    var housedata = parent.housedata;
+    var houseIndex = parent.houseIndex;
+    console.log(houseIndex);
+
+    layui.use(['transfer', 'layer', 'util'], function(){
+        var $ = layui.$
+            ,transfer = layui.transfer
+            ,layer = layui.layer
+            ,util = layui.util;
+
+                //实例调用
+                transfer.render({
+                    elem: '#test7'
+                    ,data: housedata
+                    ,title:["所有房屋","当前类别房屋"]
+                    ,id: 'key123' //定义唯一索引
+
+                    ,value:houseIndex
+
+                })
+
+
+        //批量办法事件
+        util.event('lay-demoTransferActive', {
+            getData: function(othis){
+
+                var getData = transfer.getData('key123'); //获取右侧数据
+                layer.alert(JSON.stringify(getData));
+            }
+            ,reload:function(){
+                //实例重载
+                transfer.reload('key123', {
+                    title: ["所有房屋","当前类别房屋"]
+                    ,value: houseIndex
+                })
+            }
+        })
+    });
+</script>
+</body>
+</html>

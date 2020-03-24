@@ -111,13 +111,11 @@
         $("#logout").click(function () {
             $.ajax({
                 type: "post"
-                ,url: "/login/loginOut"
+                ,url: "/login/logOut"
                 ,data: {}
                 ,success:function (res) {
-                    flag = res.msg;
-                    if (flag == "0006") {
-                        window.location.href = "/login/gologin"
-                    }
+                    window.location.href = "/login/logOut"
+
                 }
             })
         })

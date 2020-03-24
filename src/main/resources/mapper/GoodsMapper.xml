@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohua.homestayfinance.mapper.GoodsMapper">
+    <resultMap id="UserResultMap" type="com.xiaohua.homestayfinance.entity.goods">
+        <result property="goodsId" column="goods_id"></result>
+        <result property="goodsName" column="goods_name"></result>
+        <result property="goodsPlace" column="goods_place"></result>
+        <result property="goodsNum" column="goods_num"></result>
+        <result property="isDel" column="is_del"></result>
+    </resultMap>
+    <!--（查找所有分页）-->
+    <select id="selectGoodsPage"  resultType="HashMap">
+        select * from goods
+        where is_del = 1
+        group by goods_id limit #{pages},#{limit}
+    </select>
+    <!--（查找所有分页）数量-->
+    <select id="selectGoodsCount" resultType="java.lang.Integer">
+        select count(*) from goods
+        where is_del = 1
+
+    </select>
+
+    <!--物品的模糊查询-->
+    <select id="selectGoodsByName" resultType="HashMap">
+   select * from goods  where is_del = 1 AND  goods_name LIKE  concat('%',#{goodsName},'%')
+        group by goods_id limit #{pages},#{limit}
+    </select>
+    <!--物品的模糊查询的Count-->
+    <select id="selectGoodsByNameCount" resultType="java.lang.Integer">
+  select count(*) from goods  where is_del = 1 AND  goods_name LIKE  concat('%',#{goodsName},'%')
+
+    </select>
+    <!--   检查物品是否已经存在-->
+    <select id="checkGoodsName" parameterType="java.lang.String" resultType="java.lang.Boolean">
+    <![CDATA[ select count(goods_id)
+    from goods where goods_name = #{goodsName} AND is_del = 1]]>
+    </select>
+    <!--    插入物品-->
+    <insert id="insertGoods" parameterType="com.xiaohua.homestayfinance.entity.goods">
+          insert into goods (goods_name,goods_place,goods_num) values(#{goodsName},#{goodsPlace},#{goodsNum})
+    </insert>
+    <!-- 删除物品-->
+    <update id="deleteGoods" parameterType="java.lang.String">
+        update  goods set is_del  = 0 where goods_id = #{goodsId}
+    </update>
+
+    <!--修改物品-->
+    <update id="updateGoods" parameterType="com.xiaohua.homestayfinance.entity.goods">
+        update  goods set goods_name  = #{goodsName},goods_place  = #{goodsPlace},goods_num  = #{goodsNum}
+         where goods_id = #{goodsId}
+    </update>
+</mapper>

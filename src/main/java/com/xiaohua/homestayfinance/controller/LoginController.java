@@ -3,6 +3,7 @@ package com.xiaohua.homestayfinance.controller;
 import com.xiaohua.homestayfinance.entity.ResponseWrapper;
 import com.xiaohua.homestayfinance.entity.User;
 import com.xiaohua.homestayfinance.service.LoginService;
+import com.xiaohua.homestayfinance.service.UserService;
 import org.apache.catalina.security.SecurityUtil;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.IncorrectCredentialsException;
@@ -33,6 +34,8 @@ import java.util.Map;
 public class LoginController {
     @Autowired
     private LoginService service;
+    @Autowired
+    private UserService userService;
     /**
      * @Author xiaoyi
      * @Return
@@ -77,6 +80,12 @@ public class LoginController {
         //3、执行登录方法  通过是否报错来判断登录是否成功
         try {
             subject.login(token);
+            User user = userService.selectUserByAccount(name);
+            RequestAttributes ra = RequestContextHolder.getRequestAttributes();
+            HttpServletRequest request = ((ServletRequestAttributes)ra).getRequest();
+            HttpSession session = request.getSession();
+            session.setAttribute("user_id",user.getUser_Id());
+            session.setAttribute("user_name",user.getUser_Name());
             map.put("isLogin","true");
         }catch (UnknownAccountException  e)
         {
@@ -87,17 +96,7 @@ public class LoginController {
             map.put("msg","密码错误！");
         }
 
-//        User user  = new User();
-//        user.setUser_Password(password);
-//        user.setUser_Account(name);
-//        boolean result =service.loginUser(user);
-//
-//        if (result){
-//            map.put("isLogin","");
-//            map.put("msg","用户名不存在");
-//            return  map;
-//        }
-//        map.put("msg","false");
+
         return  map;
     }
 
@@ -108,14 +107,16 @@ public class LoginController {
     * @param
     * @Description 登出
     */
-    @RequestMapping("loginOut")
-    @ResponseBody
-    public ResponseWrapper loginOut(){
+    @RequestMapping("logOut")
+    public String loginOut(){
+        Subject subject = SecurityUtils.getSubject();
         RequestAttributes ra = RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes)ra).getRequest();
         HttpSession session = request.getSession();
         session.invalidate();
-        return ResponseWrapper.loginOutSuccess();
+        subject.logout();
+
+        return "login";
     }
     
 }

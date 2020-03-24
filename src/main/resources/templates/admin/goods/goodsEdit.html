@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>修改物品</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link type="text/css" th:href="@{/static/layui/css/layui.css}" rel="stylesheet">
+    <script type="text/javascript" th:src="@{/static/js/jquery-3.4.0.js}"></script>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+</head>
+
+<style>
+    .gl{
+        border: 1px solid red;
+    }
+</style>
+<body>
+<form class="layui-form" action="">
+    <div class="layui-form-item" style="margin-top: 30px;text-align: center">
+        <label class="layui-form-label">物品名称：</label>
+        <div class="layui-input-block">
+            <input id="goodsName" name="goodsName" style="width:60%" type="text" lay-verify="title" autocomplete="off"  class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">物品价格：</label>
+        <div class="layui-input-block">
+            <input id="goodsPlace" name="goodsPlace" style="width:60%" type="text" lay-verify="title" autocomplete="off"  class="layui-input">
+        </div>
+    </div>
+
+
+
+    <div class="layui-form-item" style="position:absolute;bottom: 20px">
+        <div class="layui-input-block">
+            <button type="submit" class="layui-btn" id="Submission">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+<script>
+
+    layui.use(['form', 'upload', 'layer'], function () {
+        var form = layui.form;
+        var parentData = parent.objData;
+        $('#goodsName').val(parentData.goods_name)
+        $('#goodsPlace').val(parentData.goods_place)
+
+        form.render(); //更新全部
+
+
+
+        // 房屋提交事件
+        $("#Submission").click(function (ev) {
+            ev.preventDefault()
+
+            let goodsName = $("#goodsName").val()
+            let goodsPlace = $("#goodsPlace").val()
+
+
+                        $.ajax({
+                            url:"/goods/updateGoods",
+                            type:"get",
+                            data:{
+                                goodsId:parentData.goods_id,
+                                goodsName:goodsName,
+                                goodsPlace:goodsPlace,
+                            },
+                            success:function (res) {
+                                if (res == 1){
+                                    var index = parent.layer.getFrameIndex(window.name)
+                                    parent.layer.close(index)
+                                }
+                            }
+                        })
+
+        })
+
+    });
+
+
+
+
+
+    layui.use(['form', 'layedit', 'laydate'], function(){
+
+    });
+
+
+</script>
+</body>
+</html>

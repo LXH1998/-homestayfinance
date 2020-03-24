@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>房屋物品管理</title>
+<link type="text/css" th:href="@{/static/layui/css/layui.css}" rel="stylesheet">
+<script type="text/javascript" th:src="@{/static/js/jquery-3.4.0.js}"></script>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+</head>
+<body>
+<style>
+    body{overflow-y: scroll;} /* 禁止刷新后出现横向滚动条 */
+</style>
+
+<!--搜索框-->
+<div class="demoTable">
+    物品名称：
+    <div class="layui-inline">
+        <input class="layui-input" name="goodsName" id="goodsName" placeholder="物品名" autocomplete="off">
+    </div>
+    物品价格：
+    <div class="layui-form layui-inline" style="width: 200px">
+        <input class="layui-input" name="goodsPlace" id="goodsPlace" placeholder="请输入价格" autocomplete="off">
+    </div>
+    <button type="button" class="layui-btn"  id="addGoods">
+        <i class="layui-icon">&#xe608;</i> 添加
+    </button>
+</div>
+<table id="demo" lay-filter="test"></table>
+
+<!--生成序号-->
+<script  type="text/html" id="xuhao">
+    {{d.LAY_TABLE_INDEX+1}}
+</script>
+
+<!--表格的操作-->
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/javascript">
+    layui.use(['form', 'layedit', 'laydate','table','jquery'], function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,laydate = layui.laydate
+            ,$=layui.jquery
+            , table = layui.table;
+
+        //重构函数
+        function goodsRelode(){
+            table.reload("demo",{
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+                ,url:"/goods/allGoodsDate"
+            });
+        }
+
+        //数据表表头
+        table.render({
+            elem: '#demo'
+            ,url: '/goods/allGoodsDate' //数据接口
+            ,page: true //开启分页
+            ,cols: [
+                [ //表头
+                    {field: '序号', templet: '#xuhao',title: '序号', width:'10%', sort: true, fixed: 'left', align: 'center'},
+                    {field: 'goods_name', title: '物品名称', width: '35%',align: 'center'},
+                    {field: 'goods_place', title: '物品价格(元)', width: '10%',align: 'center'},
+                    {field: 'goods_num', title: '已使用数量', width: '25%',align: 'center'},
+                    {title: '操作', width: '19%', toolbar: '#barDemo'}
+                ]
+            ]
+        });
+        //监听工具条
+        table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            console.log(data)
+            var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+            $("#id").html("填充代码");
+            // console.log(tr[0].innerHTML)  获取DOM结构
+
+            if(layEvent === 'del'){ //删除
+                $.ajax({
+                    url:'/goods/deleteGoods',
+                    type:'post',
+                    data:{
+                        goodsId: data.goods_id
+                    },
+                    success:function (res) {
+                        layer.msg(res);
+                        goodsRelode();
+                    }
+                })
+            }else if(obj.event === 'edit'){
+
+                var goodsName = $('#goodsName');
+                objData = obj.data;
+                layer.open({
+                    type:2
+                    ,skin:'layui-layer-rim'//加上边框
+                    ,maxmin: true //开启最大化最小化按钮
+                    ,area: ["450px","370px"]
+                    ,title: "修改物品信息"
+                    ,content:"/goods/goGoodsEdit"
+                    ,success: function (layero,index) {
+                        var body = layer.getChildFrame('body', index);
+                        var iframe = window['layui-layer-iframe' + index];
+                    },
+                    end:function () {
+                        objData = null;
+                        if(goodsName.val()==""){
+                            goodsRelode();
+                        }else{
+                            table.reload("demo",{
+                                page: {
+                                    curr: 1 //重新从第 1 页开始
+                                }
+                                ,url:"/goods/selectGoodsByName"
+                                ,where: {
+                                    goodsName: goodsName.val()
+                                }
+                            });
+                        }
+
+                    }
+                })
+            }
+        });
+
+            //查询框重载
+        $("#goodsName").bind("input propertychange",function () {
+            var goodsName = $('#goodsName');
+
+            //执行重载
+            if(goodsName.val()==""){
+                goodsRelode();
+            }else{
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/goods/selectGoodsByName"
+                    ,where: {
+                        goodsName: goodsName.val()
+                    }
+                });
+            }
+
+        })
+
+        //添加用户
+        $("#addGoods").click(function () {
+            var goodsName = $('#goodsName').val();
+            var goodsPlace = $('#goodsPlace').val();
+            if(goodsName == "")
+            {
+                layer.msg("请输入物品名！");
+                return;
+            }else if (goodsPlace == "") {
+                layer.msg("请输入物品价格！");
+                return;
+            }
+            $.ajax({
+                url:'/goods/checkGoodsName',
+                type:'post',
+                data:{
+                    goodsName: goodsName
+                },
+                success:function (res) {
+                    if(res){
+                        layer.msg("物品名称重复！");
+                    }else {
+                        $.ajax({
+                            url:'/goods/insertGoods',
+                            type:'post',
+                            data:{
+                                goodsName: goodsName,
+                                goodsPlace: goodsPlace
+                            },
+                            success:function (res) {
+                                if(res == 1){
+                                    layer.msg("添加成功！")
+                                    goodsRelode();
+                                }
+                            }
+                        })
+                    }
+                }
+            })
+        })
+    });
+
+</script>
+</body>
+</html>

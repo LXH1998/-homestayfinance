@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>房屋类别管理</title>
+<link type="text/css" th:href="@{/static/layui/css/layui.css}" rel="stylesheet">
+<script type="text/javascript" th:src="@{/static/js/jquery-3.4.0.js}"></script>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+</head>
+<body>
+<style>
+    body{overflow-y: scroll;} /* 禁止刷新后出现横向滚动条 */
+</style>
+
+<!--搜索框-->
+<div class="demoTable">
+    房屋名称：
+    <div class="layui-inline">
+        <input class="layui-input" name="house_name" id="house_name" placeholder="搜索房屋" autocomplete="off">
+    </div>
+    房屋类型：
+    <div class="layui-form layui-inline" style="width: 200px">
+        <select id="house_type" name="house_type"  lay-search>
+            <option value=""></option>
+        </select>
+    </div>
+    <button type="button" class="layui-btn"  id="addHouse">
+        <i class="layui-icon">&#xe608;</i> 添加
+    </button>
+</div>
+<table id="demo" lay-filter="test"></table>
+
+<!--生成序号-->
+<script  type="text/html" id="xuhao">
+    {{d.LAY_TABLE_INDEX+1}}
+</script>
+
+
+<!--自定义模板状态量-->
+<!--<script type="text/html" id="titleTpl">-->
+<!--    {{#  if(d.batch_Hide == 1){ }}-->
+<!--    <button type="button" class="layui-btn layui-btn-sm" disabled="disabled">开启中</button>-->
+<!--    {{#  } else if(d.batch_Hide == 0){ }}-->
+<!--    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" disabled="disabled">未开启</button>-->
+<!--    {{#  }else if(d.batch_Hide == 2){ }}-->
+<!--    <button type="button" class="layui-btn layui-btn-sm layui-btn-warm" disabled="disabled">暂停中</button>-->
+<!--    {{#  }else if(d.batch_Hide == 3){ }}-->
+<!--    <button type="button" class="layui-btn layui-btn-sm layui-btn-danger" disabled="disabled">已结束</button>-->
+<!--    {{#  } }}-->
+<!--</script>-->
+
+<!--表格的操作-->
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/javascript">
+    var teach_id;
+    function a(){
+        alert("1111")
+    }
+    layui.use(['form', 'layedit', 'laydate','table','jquery'], function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,laydate = layui.laydate
+            ,$=layui.jquery
+            , table = layui.table;
+
+        //重构函数
+        function houseRelode(){
+            table.reload("demo",{
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+                ,url:"/house/allHouseDate"
+            });
+        }
+
+        //初始化房屋类别
+        $.ajax({
+            url: '/house/houseTypeList',
+            dataType: 'json',
+            type: 'get',
+            success: function (data) {
+                $.each(data.data, function (index,item) {
+                    $('#house_type').append(new Option(item.housetype_name,item.housetype_id));// 下拉菜单里添加元素
+                });
+                layui.form.render("select");
+            }
+        })
+        //数据表表头
+        table.render({
+            elem: '#demo'
+            ,url: '/house/allHouseDate' //数据接口
+            ,page: true //开启分页
+            ,cols: [
+                [ //表头
+                    {field: '序号', templet: '#xuhao',title: '序号', width:'10%', sort: true, fixed: 'left', align: 'center'},
+                    {field: 'house_name', title: '房屋名称', width: '25%',align: 'center'},
+                    {field: 'housetype_name', title: '房屋类型', width: '10%',align: 'center'},
+                    {field: 'house_address', title: '房屋地址', width: '25%',align: 'center'},
+                    {field: 'house_price', title: '房屋价格', width: '10%',align: 'center'},
+                    {title: '操作', width: '19%', toolbar: '#barDemo'}
+                ]
+            ]
+        });
+        //监听工具条
+        table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            console.log(data)
+            var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+            $("#id").html("填充代码");
+            // console.log(tr[0].innerHTML)  获取DOM结构
+
+            if(layEvent === 'del'){ //删除
+                $.ajax({
+                    url:'/house/deleteOneHouse',
+                    type:'post',
+                    data:{
+                        houseId: data.house_id
+                    },
+                    success:function (res) {
+                        layer.msg(res.result);
+                        houseRelode();
+                    }
+                })
+            }else if(obj.event === 'edit'){
+
+                var house_name = $('#house_name');
+                var house_type = $('#house_type');
+                objData = obj.data;
+                layer.open({
+                    type:2
+                    ,skin:'layui-layer-rim'//加上边框
+                    ,maxmin: true //开启最大化最小化按钮
+                    ,area: ["450px","470px"]
+                    ,title: "新增房屋信息"
+                    ,content:"/house/goHouseEdit"
+                    ,success: function (layero,index) {
+                        var body = layer.getChildFrame('body', index);
+                        var iframe = window['layui-layer-iframe' + index];
+                    },
+                    end:function () {
+                        objData = null;
+                        if(house_name.val()==""&&house_type.val()==""){
+                            table.reload("demo",{
+                                page: {
+                                    curr: 1 //重新从第 1 页开始
+                                }
+                                ,url:"/house/allHouseDate"
+
+                            });
+                        }else{
+                            table.reload("demo",{
+                                page: {
+                                    curr: 1 //重新从第 1 页开始
+                                }
+                                ,url:"/house/selectHouseByNameAndType"
+                                ,where: {
+                                    houseName: house_name.val()
+                                    ,houseType:house_type.val()
+                                }
+                            });
+                        }
+
+                    }
+                })
+            }
+        });
+
+            //查询框重载
+        $("#house_name").bind("input propertychange",function () {
+            var house_name = $('#house_name');
+            var house_type = $('#house_type');
+            //执行重载
+            if(house_name.val()==""&&house_type.val()==""){
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/house/allHouseDate"
+
+                });
+            }else{
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/house/selectHouseByNameAndType"
+                    ,where: {
+                        houseName: house_name.val()
+                        ,houseType:house_type.val()
+                    }
+                });
+            }
+
+        })
+        form.on('select' ,function (data) {
+            var house_name = $('#house_name');
+            var house_type = $('#house_type');
+            //执行重载
+            if(house_name.val()==""&&house_type.val()==""){
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/house/allHouseDate"
+
+                });
+            }else{
+                table.reload("demo",{
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,url:"/house/selectHouseByNameAndType"
+                    ,where: {
+                        houseName: house_name.val()
+                        ,houseType:house_type.val()
+                    }
+                });
+            }
+        })
+        //添加用户
+        $("#addHouse").click(function () {
+
+            var house_name = $('#house_name');
+            var house_type = $('#house_type');
+            layer.open({
+                type:2
+                ,skin:'layui-layer-rim'//加上边框
+                ,maxmin: true //开启最大化最小化按钮
+                ,area: ["450px","470px"]
+                ,title: "新增房屋信息"
+                ,content:"/house/goHouseEdit"
+                ,success: function (layero,index) {
+                    var body = layer.getChildFrame('body', index);
+                    var iframe = window['layui-layer-iframe' + index];
+                },
+                end:function () {
+                    if(house_name.val()==""&&house_type.val()==""){
+                        table.reload("demo",{
+                            page: {
+                                curr: 1 //重新从第 1 页开始
+                            }
+                            ,url:"/house/allHouseDate"
+
+                        });
+                    }else{
+                        table.reload("demo",{
+                            page: {
+                                curr: 1 //重新从第 1 页开始
+                            }
+                            ,url:"/house/selectHouseByNameAndType"
+                            ,where: {
+                                houseName: house_name.val()
+                                ,houseType:house_type.val()
+                            }
+                        });
+                    }
+
+                }
+            })
+        })
+    });
+
+</script>
+</body>
+</html>
